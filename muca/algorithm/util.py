@@ -59,21 +59,15 @@ class OrderParameters:
         """
         if len(self.normalized_energy_count) == 0:
             return OrderParameterResults()
-        
-        energies = np.array(list(self.normalized_energy_count.keys())) * energy_coefficient
 
-        _, sorted_mag_2 = zip(
-            *sorted(zip(energies, self.mag_2.values()))
+        energies = (
+            np.array(list(self.normalized_energy_count.keys())) * energy_coefficient
         )
-        _, sorted_mag_4 = zip(
-            *sorted(zip(energies, self.mag_4.values()))
-        )
-        _, sorted_abs_f2 = zip(
-            *sorted(zip(energies, self.abs_f2.values()))
-        )
-        _, sorted_abs_f4 = zip(
-            *sorted(zip(energies, self.abs_f4.values()))
-        )
+
+        _, sorted_mag_2 = zip(*sorted(zip(energies, self.mag_2.values())))
+        _, sorted_mag_4 = zip(*sorted(zip(energies, self.mag_4.values())))
+        _, sorted_abs_f2 = zip(*sorted(zip(energies, self.abs_f2.values())))
+        _, sorted_abs_f4 = zip(*sorted(zip(energies, self.abs_f4.values())))
         normalized_energies, counts = zip(
             *sorted(zip(energies, self.normalized_energy_count.values()))
         )
@@ -83,7 +77,7 @@ class OrderParameters:
             forth_magnetization=np.array(sorted_mag_4) / np.array(counts),
             abs_fourier_second=np.array(sorted_abs_f2) / np.array(counts),
             abs_fourier_fourth=np.array(sorted_abs_f4) / np.array(counts),
-            energies=np.array(normalized_energies)*energy_coefficient,
+            energies=np.array(normalized_energies) * energy_coefficient,
             normalized_energies=np.array(normalized_energies),
         )
 

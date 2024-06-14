@@ -1,6 +1,7 @@
 import mpmath
 import numpy as np
 
+
 class Analyzer:
 
     @classmethod
@@ -79,5 +80,7 @@ class Analyzer:
             np.ndarray: The heat capacity of the system for given temperatures.
         """
         e = cls.calculate_energy_expectation(energies, entropies, temperature_list)
-        ee = cls.calculate_energy_expectation(energies, entropies, temperature_list, power=2)
+        ee = cls.calculate_energy_expectation(
+            energies, entropies, temperature_list, power=2
+        )
         return (ee - e**2) / (temperature_list**2)

@@ -32,7 +32,10 @@ class OrderParameterResults:
 
     def __post_init__(self):
         # Check if the results are not zero-size arrays
-        if (self.squared_magnetization is not None and self.squared_magnetization.size == 0):
+        if (
+            self.squared_magnetization is not None
+            and self.squared_magnetization.size == 0
+        ):
             raise ValueError("The squared magnetization array is empty.")
         if self.forth_magnetization is not None and self.forth_magnetization.size == 0:
             raise ValueError("The forth magnetization array is empty.")
@@ -101,6 +104,7 @@ class WangLandauResults:
         """
         with open(file_path, "rb") as f:
             return pickle.load(f)
+
 
 @dataclass
 class MulticanonicalResults:
