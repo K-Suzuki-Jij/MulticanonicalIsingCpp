@@ -1,14 +1,15 @@
 from muca.algorithm.multicanonical import BaseMulticanonicalResults, Multicanonical
 from muca.algorithm.util import OrderParameters
+from muca.results.simulation_result import WangLandauResults
 from muca.algorithm.parameters import MulticanonicalParameters
-from muca.results.analysis import WangLandauResults
 import numpy as np
 
 def test_base_multicanonical_results():
     base_multicanonical_results = BaseMulticanonicalResults(
         histogram_dict={1: 2, 4: 3},
         order_parameters=OrderParameters(
-            sq_mag={1: 1.0, 4: 3.3},
+            mag_2={1: 1.0, 4: 3.3},
+            mag_4={1: 2.0, 4: 3.0},
             abs_f2={1: 2.0, 4: 3.0},
             abs_f4={1: 4.0, 4: 6.0},
             normalized_energy_count={1: 10, 4: 20},
@@ -16,7 +17,8 @@ def test_base_multicanonical_results():
     )
 
     assert base_multicanonical_results.histogram_dict == {1: 2.0, 4: 3.0}
-    assert base_multicanonical_results.order_parameters.sq_mag == {1: 1.0, 4: 3.3}
+    assert base_multicanonical_results.order_parameters.mag_2 == {1: 1.0, 4: 3.3}
+    assert base_multicanonical_results.order_parameters.mag_4 == {1: 2.0, 4: 3.0}
     assert base_multicanonical_results.order_parameters.abs_f2 == {1: 2.0, 4: 3.0}
     assert base_multicanonical_results.order_parameters.abs_f4 == {1: 4.0, 4: 6.0}
     assert base_multicanonical_results.order_parameters.normalized_energy_count == {1: 10, 4: 20}

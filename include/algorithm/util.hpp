@@ -10,14 +10,8 @@
 namespace cpp_muca {
 
 struct OrderParameters {
-
-   void Assign(const int normalized_energy, const OrderParameters &other) {
-      this->sq_mag[normalized_energy] = other.sq_mag.at(normalized_energy);
-      this->abs_f2[normalized_energy] = other.abs_f2.at(normalized_energy);
-      this->abs_f4[normalized_energy] = other.abs_f4.at(normalized_energy);
-      this->normalized_energy_count[normalized_energy] = other.normalized_energy_count.at(normalized_energy);
-   }
-   std::unordered_map<int, double> sq_mag;
+   std::unordered_map<int, double> mag_2;
+   std::unordered_map<int, double> mag_4;
    std::unordered_map<int, double> abs_f2;
    std::unordered_map<int, double> abs_f4;
    std::unordered_map<int, std::int64_t> normalized_energy_count;
@@ -52,9 +46,11 @@ public:
       for (const auto &[qx, qy]: this->ordered_Q) {
          temp_abs_f2 += std::norm(this->fourier[qx][qy]);
       }
+      const double sq_mag = std::norm(this->fourier[0][0]);
       this->order_parameters.abs_f2[normalized_energy] += temp_abs_f2;
       this->order_parameters.abs_f4[normalized_energy] += temp_abs_f2*temp_abs_f2;
-      this->order_parameters.sq_mag[normalized_energy] += std::norm(this->fourier[0][0]);
+      this->order_parameters.mag_2[normalized_energy] += sq_mag;
+      this->order_parameters.mag_4[normalized_energy] += sq_mag*sq_mag;
       this->order_parameters.normalized_energy_count[normalized_energy] += 1;
    }
    
@@ -63,9 +59,11 @@ public:
       for (const auto &[qx, qy]: this->ordered_Q) {
          temp_abs_f2 += std::norm(this->fourier[qx][qy]);
       }
+      const double sq_mag = std::norm(this->fourier[0][0]);
       this->order_parameters.abs_f2.at(normalized_energy) += temp_abs_f2;
       this->order_parameters.abs_f4.at(normalized_energy) += temp_abs_f2*temp_abs_f2;
-      this->order_parameters.sq_mag.at(normalized_energy) += std::norm(this->fourier[0][0]);
+      this->order_parameters.mag_2.at(normalized_energy) += sq_mag;
+      this->order_parameters.mag_4.at(normalized_energy) += sq_mag*sq_mag;
       this->order_parameters.normalized_energy_count.at(normalized_energy) += 1;
    }
    
@@ -75,7 +73,8 @@ public:
          if (normalized_energy_range.first <= it.first && it.first <= normalized_energy_range.second) {
             this->order_parameters.abs_f2[it.first] = 0;
             this->order_parameters.abs_f4[it.first] = 0;
-            this->order_parameters.sq_mag[it.first] = 0;
+            this->order_parameters.mag_2[it.first] = 0;
+            this->order_parameters.mag_4[it.first] = 0;
             this->order_parameters.normalized_energy_count[it.first] = 0;
          }
       }

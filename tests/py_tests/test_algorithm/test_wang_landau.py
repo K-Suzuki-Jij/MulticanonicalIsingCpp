@@ -1,8 +1,7 @@
 from muca.algorithm.wang_landau import BaseWangLandauResults, WangLandau
 from muca.algorithm.parameters import WangLandauParameters
 from muca.algorithm.util import OrderParameters
-from muca.algorithm.parameters import MulticanonicalParameters
-from muca.results.analysis import WangLandauResults
+from muca.results.simulation_result import WangLandauResults
 from muca.model.p_body_ising import PBodyTwoDimIsing
 import numpy as np
 
@@ -11,7 +10,7 @@ def test_base_wang_landau_results():
     base_wang_landau_results = BaseWangLandauResults(
         entropy_dict={1: 2.0, 4: 3.0},
         order_parameters=OrderParameters(
-            sq_mag={1: 1.0, 4: 3.3},
+            mag_2={1: 1.0, 4: 3.3},
             abs_f2={1: 2.0, 4: 3.0},
             abs_f4={1: 4.0, 4: 6.0},
             normalized_energy_count={1: 10, 4: 20},
@@ -21,7 +20,7 @@ def test_base_wang_landau_results():
     )
 
     assert base_wang_landau_results.entropy_dict == {1: 2.0, 4: 3.0}
-    assert base_wang_landau_results.order_parameters.sq_mag == {1: 1.0, 4: 3.3}
+    assert base_wang_landau_results.order_parameters.mag_2 == {1: 1.0, 4: 3.3}
     assert base_wang_landau_results.order_parameters.abs_f2 == {1: 2.0, 4: 3.0}
     assert base_wang_landau_results.order_parameters.abs_f4 == {1: 4.0, 4: 6.0}
     assert base_wang_landau_results.order_parameters.normalized_energy_count == {1: 10, 4: 20}

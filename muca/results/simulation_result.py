@@ -15,6 +15,7 @@ class OrderParameterResults:
 
     Attributes:
         squared_magnetization (Optional[np.ndarray]): The squared magnetization of the system.
+        forth_magnetization (Optional[np.ndarray]): The forth magnetization of the system.
         abs_fourier_second (Optional[np.ndarray]): The absolute value of the second Fourier transform of the order parameter.
         abs_fourier_fourth (Optional[np.ndarray]): The absolute value of the fourth Fourier transform of the order parameter.
         energies (Optional[np.ndarray]): The energies of the system.
@@ -23,6 +24,7 @@ class OrderParameterResults:
     """
 
     squared_magnetization: Optional[np.ndarray] = None
+    forth_magnetization: Optional[np.ndarray] = None
     abs_fourier_second: Optional[np.ndarray] = None
     abs_fourier_fourth: Optional[np.ndarray] = None
     energies: Optional[np.ndarray] = None
@@ -30,11 +32,10 @@ class OrderParameterResults:
 
     def __post_init__(self):
         # Check if the results are not zero-size arrays
-        if (
-            self.squared_magnetization is not None
-            and self.squared_magnetization.size == 0
-        ):
+        if (self.squared_magnetization is not None and self.squared_magnetization.size == 0):
             raise ValueError("The squared magnetization array is empty.")
+        if self.forth_magnetization is not None and self.forth_magnetization.size == 0:
+            raise ValueError("The forth magnetization array is empty.")
         if self.abs_fourier_second is not None and self.abs_fourier_second.size == 0:
             raise ValueError(
                 "The absolute value of the second Fourier transform array is empty."
@@ -101,47 +102,6 @@ class WangLandauResults:
         with open(file_path, "rb") as f:
             return pickle.load(f)
 
-    def symmetrize_results(self) -> "WangLandauResults":
-        """Symmetrize the results of the simulation.
-        The entropies and the order parameters are symmetrized by averaging the values of the results and their reverse.
-
-        Returns:
-            WangLandauResults: The symmetrized results of the simulation.
-        """
-        symmetrized_order_parameters = OrderParameterResults(
-            squared_magnetization=(
-                self.order_parameters.squared_magnetization
-                + self.order_parameters.squared_magnetization[::-1]
-            )
-            / 2,
-            abs_fourier_second=(
-                self.order_parameters.abs_fourier_second
-                + self.order_parameters.abs_fourier_second[::-1]
-            )
-            / 2,
-            abs_fourier_fourth=(
-                self.order_parameters.abs_fourier_fourth
-                + self.order_parameters.abs_fourier_fourth[::-1]
-            )
-            / 2,
-            energies=self.order_parameters.energies,
-            normalized_energies=self.order_parameters.normalized_energies,
-        )
-        symmetrized_entropies = (self.entropies + self.entropies[::-1]) / 2
-
-        return WangLandauResults(
-            parameters=self.parameters,
-            entropies=symmetrized_entropies,
-            energies=self.energies,
-            normalized_energies=self.normalized_energies,
-            total_sweeps=self.total_sweeps,
-            final_modification_factor=self.final_modification_factor,
-            order_parameters=symmetrized_order_parameters,
-            model=self.model,
-            info=self.info,
-        )
-
-
 @dataclass
 class MulticanonicalResults:
     """Class to store the results of the Multicanonical simulation.
@@ -193,43 +153,3 @@ class MulticanonicalResults:
         """
         with open(file_path, "rb") as f:
             return pickle.load(f)
-
-    def symmetrize_results(self) -> "MulticanonicalResults":
-        """Symmetrize the results of the simulation.
-        The entropies and the order parameters are symmetrized by averaging the values of the results and their reverse.
-
-        Returns:
-            MulticanonicalResults: The symmetrized results of the simulation.
-        """
-        symmetrized_order_parameters = OrderParameterResults(
-            squared_magnetization=(
-                self.order_parameters.squared_magnetization
-                + self.order_parameters.squared_magnetization[::-1]
-            )
-            / 2,
-            abs_fourier_second=(
-                self.order_parameters.abs_fourier_second
-                + self.order_parameters.abs_fourier_second[::-1]
-            )
-            / 2,
-            abs_fourier_fourth=(
-                self.order_parameters.abs_fourier_fourth
-                + self.order_parameters.abs_fourier_fourth[::-1]
-            )
-            / 2,
-            energies=self.order_parameters.energies,
-            normalized_energies=self.order_parameters.normalized_energies,
-        )
-        symmetrized_entropies = (self.entropies + self.entropies[::-1]) / 2
-
-        return MulticanonicalResults(
-            initial_data=self.initial_data,
-            parameters=self.parameters,
-            entropies=symmetrized_entropies,
-            energies=self.energies,
-            normalized_energies=self.normalized_energies,
-            histogram=self.histogram,
-            order_parameters=symmetrized_order_parameters,
-            model=self.model,
-            info=self.info,
-        )

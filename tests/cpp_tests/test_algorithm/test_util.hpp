@@ -12,16 +12,15 @@ TEST(AlgorithmUtil, OrderParameters) {
    auto op = OrderParameters();
    op.abs_f2[0] = 1.0;
    op.abs_f4[0] = 2.0;
-   op.sq_mag[0] = 3.0;
+   op.mag_2[0] = 3.0;
+   op.mag_4[0] = 4.0;
    op.normalized_energy_count[0] = 4;
 
-   auto op2 = OrderParameters();
-   op2.Assign(0, op);
-
-   EXPECT_EQ(op.abs_f2.at(0), op2.abs_f2.at(0));
-   EXPECT_EQ(op.abs_f4.at(0), op2.abs_f4.at(0));
-   EXPECT_EQ(op.sq_mag.at(0), op2.sq_mag.at(0));
-   EXPECT_EQ(op.normalized_energy_count.at(0), op2.normalized_energy_count.at(0));
+   EXPECT_EQ(op.abs_f2.at(0), 1.0);
+   EXPECT_EQ(op.abs_f4.at(0), 2.0);
+   EXPECT_EQ(op.mag_2.at(0), 3.0);
+   EXPECT_EQ(op.mag_4.at(0), 4.0);
+   EXPECT_EQ(op.normalized_energy_count.at(0), 4);
 }
 
 
@@ -35,7 +34,8 @@ TEST(AlgorithmUtil, OrderParameterCounter) {
    };
 
    auto opc = OrderParameterCounter(model, initial_spins);
-   EXPECT_EQ(opc.ToOrderParameters().sq_mag.size(), 0);
+   EXPECT_EQ(opc.ToOrderParameters().mag_2.size(), 0);
+   EXPECT_EQ(opc.ToOrderParameters().mag_4.size(), 0);
    EXPECT_EQ(opc.ToOrderParameters().abs_f2.size(), 0);
    EXPECT_EQ(opc.ToOrderParameters().abs_f4.size(), 0);
    EXPECT_EQ(opc.ToOrderParameters().normalized_energy_count.size(), 0);
@@ -43,7 +43,8 @@ TEST(AlgorithmUtil, OrderParameterCounter) {
    EXPECT_THROW(opc.UpdateOrderParametersAt(99), std::out_of_range);
 
    opc.UpdateOrderParameters(99);
-   EXPECT_EQ(opc.ToOrderParameters().sq_mag.at(99), 0);
+   EXPECT_EQ(opc.ToOrderParameters().mag_2.at(99), 0);
+   EXPECT_EQ(opc.ToOrderParameters().mag_4.at(99), 0);
    EXPECT_EQ(opc.ToOrderParameters().abs_f2.at(99), 1);
    EXPECT_EQ(opc.ToOrderParameters().abs_f4.at(99), 1);
    EXPECT_EQ(opc.ToOrderParameters().normalized_energy_count.at(99), 1);

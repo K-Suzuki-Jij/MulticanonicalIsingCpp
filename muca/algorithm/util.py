@@ -15,13 +15,15 @@ class OrderParameters:
     """Class to store the order parameter distribution of the system.
 
     Attributes:
-        sq_mag (dict[int, float]): The squared magnetization of the system.
+        mag_2 (dict[int, float]): The squared magnetization of the system.
+        mag_4 (dict[int, float]): The fourth power of the magnetization of the system.
         abs_f2 (dict[int, float]): The absolute value of the second Fourier transform of the order parameter.
         abs_f4 (dict[int, float]): The absolute value of the fourth Fourier transform of the order parameter.
         normalized_energy_count (dict[int, int]): The number of times an energy was visited.
     """
 
-    sq_mag: dict[int, float] = field(default_factory=lambda: defaultdict(float))
+    mag_2: dict[int, float] = field(default_factory=lambda: defaultdict(float))
+    mag_4: dict[int, float] = field(default_factory=lambda: defaultdict(float))
     abs_f2: dict[int, float] = field(default_factory=lambda: defaultdict(float))
     abs_f4: dict[int, float] = field(default_factory=lambda: defaultdict(float))
     normalized_energy_count: dict[int, int] = field(
@@ -35,7 +37,8 @@ class OrderParameters:
             normalized_energy (int): The normalized energy of the system.
             other (OrderParameters): The other OrderParameters.
         """
-        self.sq_mag[normalized_energy] = other.sq_mag[normalized_energy]
+        self.mag_2[normalized_energy] = other.mag_2[normalized_energy]
+        self.mag_4[normalized_energy] = other.mag_4[normalized_energy]
         self.abs_f2[normalized_energy] = other.abs_f2[normalized_energy]
         self.abs_f4[normalized_energy] = other.abs_f4[normalized_energy]
         self.normalized_energy_count[normalized_energy] = other.normalized_energy_count[
@@ -56,28 +59,31 @@ class OrderParameters:
         """
         if len(self.normalized_energy_count) == 0:
             return OrderParameterResults()
+        
+        energies = np.array(list(self.normalized_energy_count.keys())) * energy_coefficient
 
-        _, sorted_sq_mag = zip(
-            *sorted(self.sq_mag.items(), key=lambda x: x[0] * energy_coefficient)
+        _, sorted_mag_2 = zip(
+            *sorted(zip(energies, self.mag_2.values()))
+        )
+        _, sorted_mag_4 = zip(
+            *sorted(zip(energies, self.mag_4.values()))
         )
         _, sorted_abs_f2 = zip(
-            *sorted(self.abs_f2.items(), key=lambda x: x[0] * energy_coefficient)
+            *sorted(zip(energies, self.abs_f2.values()))
         )
         _, sorted_abs_f4 = zip(
-            *sorted(self.abs_f4.items(), key=lambda x: x[0] * energy_coefficient)
+            *sorted(zip(energies, self.abs_f4.values()))
         )
         normalized_energies, counts = zip(
-            *sorted(
-                self.normalized_energy_count.items(),
-                key=lambda x: x[0] * energy_coefficient,
-            )
+            *sorted(zip(energies, self.normalized_energy_count.values()))
         )
 
         return OrderParameterResults(
-            squared_magnetization=np.array(sorted_sq_mag) / np.array(counts),
+            squared_magnetization=np.array(sorted_mag_2) / np.array(counts),
+            forth_magnetization=np.array(sorted_mag_4) / np.array(counts),
             abs_fourier_second=np.array(sorted_abs_f2) / np.array(counts),
             abs_fourier_fourth=np.array(sorted_abs_f4) / np.array(counts),
-            energies=np.array(normalized_energies) * energy_coefficient,
+            energies=np.array(normalized_energies)*energy_coefficient,
             normalized_energies=np.array(normalized_energies),
         )
 
@@ -141,11 +147,11 @@ class OrderParameterCounter:
         temp_abs_f2 = np.sum(
             np.abs(self.fourier[self.ordered_Q[:, 0], self.ordered_Q[:, 1]]) ** 2
         )
+        sq_mag = np.abs(self.fourier[0, 0]) ** 2
         self.order_parameters.abs_f2[normalized_energy] += temp_abs_f2
         self.order_parameters.abs_f4[normalized_energy] += temp_abs_f2**2
-        self.order_parameters.sq_mag[normalized_energy] += (
-            np.abs(self.fourier[0, 0]) ** 2
-        )
+        self.order_parameters.mag_2[normalized_energy] += sq_mag
+        self.order_parameters.mag_4[normalized_energy] += sq_mag**2
         self.order_parameters.normalized_energy_count[normalized_energy] += 1
 
     def to_order_parameters(self) -> OrderParameters:
@@ -309,11 +315,13 @@ class AlgorithmUtil:
 
         # Convert to dict
         sq = dict(zip(op_1.normalized_energies, op_1.squared_magnetization))
+        sq_sq = dict(zip(op_1.normalized_energies, op_1.forth_magnetization))
         abs2 = dict(zip(op_1.normalized_energies, op_1.abs_fourier_second))
         abs4 = dict(zip(op_1.normalized_energies, op_1.abs_fourier_fourth))
         energies = dict(zip(op_1.normalized_energies, op_1.energies))
 
         i_sq = dict(zip(op_2.normalized_energies, op_2.squared_magnetization))
+        i_sq_sq = dict(zip(op_2.normalized_energies, op_2.forth_magnetization))
         i_abs2 = dict(zip(op_2.normalized_energies, op_2.abs_fourier_second))
         i_abs4 = dict(zip(op_2.normalized_energies, op_2.abs_fourier_fourth))
         i_energies = dict(zip(op_2.normalized_energies, op_2.energies))
@@ -321,12 +329,14 @@ class AlgorithmUtil:
         # Merge
         for e in i_sq.keys():
             sq[e] = (sq[e] + i_sq[e]) * 0.5 if e in sq else i_sq[e]
+            sq_sq[e] = (sq_sq[e] + i_sq_sq[e]) * 0.5 if e in sq_sq else i_sq_sq[e]
             abs2[e] = (abs2[e] + i_abs2[e]) * 0.5 if e in abs2 else i_abs2[e]
             abs4[e] = (abs4[e] + i_abs4[e]) * 0.5 if e in abs4 else i_abs4[e]
             energies[e] = energies[e] if e in energies else i_energies[e]
 
         # Sort
         _, sorted_sq = zip(*sorted(zip(energies.values(), sq.values())))
+        _, sorted_sq_sq = zip(*sorted(zip(energies.values(), sq_sq.values())))
         _, sorted_abs2 = zip(*sorted(zip(energies.values(), abs2.values())))
         _, sorted_abs4 = zip(*sorted(zip(energies.values(), abs4.values())))
         sorted_energies, normalized_energies = zip(
@@ -335,6 +345,7 @@ class AlgorithmUtil:
 
         return OrderParameterResults(
             squared_magnetization=np.array(sorted_sq),
+            forth_magnetization=np.array(sorted_sq_sq),
             abs_fourier_second=np.array(sorted_abs2),
             abs_fourier_fourth=np.array(sorted_abs4),
             energies=np.array(sorted_energies),

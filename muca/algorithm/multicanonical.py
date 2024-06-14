@@ -119,7 +119,7 @@ def _post_process(
 
     # Merge order parameters
     energy_coeff = (
-        initial_data.model.J
+        abs(initial_data.model.J)
         * (initial_data.model.spin_scale_factor / 2) ** initial_data.model.p
     )
     order_parameters = order_parameters.to_order_parameter_results(energy_coeff)

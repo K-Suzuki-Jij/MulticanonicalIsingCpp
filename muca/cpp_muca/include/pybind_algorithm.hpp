@@ -58,15 +58,17 @@ void PyBindOrderParameters(py::module &m) {
    auto py_class = py::class_<OrderParameters>(m, "OrderParameters", py::module_local());
 
    // Constructors
-   py_class.def(py::init<const std::unordered_map<int, double>&, const std::unordered_map<int, double>&, const std::unordered_map<int, double>&, const std::unordered_map<int, std::int64_t>&>(),
-                "sq_mag"_a,
+   py_class.def(py::init<const std::unordered_map<int, double>&, const std::unordered_map<int, double>&, const std::unordered_map<int, double>&, const std::unordered_map<int, double>&, const std::unordered_map<int, std::int64_t>&>(),
+                "mag_2"_a,
+                "mag_4"_a,
                 "abs_f2"_a,
                 "abs_f4"_a,
                 "normalized_energy_count"_a
                 );
 
    //Public Member Variables
-   py_class.def_readonly("sq_mag", &OrderParameters::sq_mag);
+   py_class.def_readonly("mag_2", &OrderParameters::mag_2);
+   py_class.def_readonly("mag_4", &OrderParameters::mag_4);
    py_class.def_readonly("abs_f2", &OrderParameters::abs_f2);
    py_class.def_readonly("abs_f4", &OrderParameters::abs_f4);
    py_class.def_readonly("normalized_energy_count", &OrderParameters::normalized_energy_count);

@@ -76,7 +76,7 @@ class PBodyTwoDimIsing:
             spin_prod_y = np.prod(spin_configuration[x, (y + offset) % self.Ly])
             energy += spin_prod_x + spin_prod_y
 
-        return energy
+        return energy*(int((self.J > 0) - (self.J < 0)))
 
     def make_energy_difference(self, spin_configuration: np.ndarray) -> np.ndarray:
         """Make the energy difference for the spin configuration.
@@ -88,6 +88,7 @@ class PBodyTwoDimIsing:
         Returns:
             np.ndarray: The energy difference as a two dimensional array.
         """
+        sign = int((self.J > 0) - (self.J < 0))
         energy_difference = np.zeros((self.Lx, self.Ly), dtype=np.int64)
         for x, y in it.product(range(self.Lx), range(self.Ly)):
             x_indices = [
@@ -102,7 +103,7 @@ class PBodyTwoDimIsing:
             for i in range(self.p):
                 spin_prod_x = np.prod(spin_configuration[sequences_x[i], y])
                 spin_prod_y = np.prod(spin_configuration[x, sequences_y[i]])
-                energy_difference[x, y] += spin_prod_x + spin_prod_y
+                energy_difference[x, y] += sign*(spin_prod_x + spin_prod_y)
 
         return energy_difference
 
@@ -130,7 +131,7 @@ class PBodyTwoDimIsing:
             return
 
         # Rename some variables for clarity
-        dS = new_spin_value - spin_configuration[x, y]
+        dS = (new_spin_value - spin_configuration[x, y])*int((self.J > 0) - (self.J < 0))
         dE = energy_difference
         S = spin_configuration
         Lx = self.Lx

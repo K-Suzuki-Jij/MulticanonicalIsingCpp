@@ -127,7 +127,7 @@ def _post_process(
         order_parameters_list=[r.order_parameters for r in result_list],
         connect_edge=True,
     )
-    energy_coeff = model.J * (model.spin_scale_factor / 2) ** model.p
+    energy_coeff = abs(model.J) * (model.spin_scale_factor / 2) ** model.p
     order_parameters = order_parameters.to_order_parameter_results(energy_coeff)
 
     # Sort

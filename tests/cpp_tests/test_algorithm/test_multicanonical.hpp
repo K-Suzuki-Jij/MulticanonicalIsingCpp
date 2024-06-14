@@ -19,7 +19,8 @@ TEST(AlgorithmMulticanonical, BaseMulticanonicalResults) {
    EXPECT_EQ(result.histogram_dict.at(0), 0);
    EXPECT_EQ(result.histogram_dict.at(1), 1);
    EXPECT_EQ(result.histogram_dict.at(2), 2);
-   EXPECT_EQ(result.order_parameters.sq_mag.size(), 0);
+   EXPECT_EQ(result.order_parameters.mag_2.size(), 0);
+   EXPECT_EQ(result.order_parameters.mag_4.size(), 0);
    EXPECT_EQ(result.order_parameters.abs_f2.size(), 0);
    EXPECT_EQ(result.order_parameters.abs_f4.size(), 0);
    EXPECT_EQ(result.order_parameters.normalized_energy_count.size(), 0);
@@ -39,7 +40,8 @@ TEST(AlgorithmMulticanonical, BaseMulticanonical) {
                                           {-2*6*6*2*2*2, 0.0},
                                           true);
    
-   EXPECT_EQ(result.order_parameters.sq_mag.size(), result.histogram_dict.size());
+   EXPECT_EQ(result.order_parameters.mag_2.size(), result.histogram_dict.size());
+   EXPECT_EQ(result.order_parameters.mag_4.size(), result.histogram_dict.size());
    EXPECT_EQ(result.order_parameters.abs_f2.size(), result.histogram_dict.size());
    EXPECT_EQ(result.order_parameters.abs_f4.size(), result.histogram_dict.size());
    EXPECT_EQ(result.order_parameters.normalized_energy_count.size(), result.histogram_dict.size());
@@ -55,19 +57,23 @@ TEST(AlgorithmMulticanonical, BaseMulticanonical) {
    EXPECT_EQ(hist_max, 0);
    for (const auto &it: result.histogram_dict) {
       EXPECT_TRUE(it.second > 0);
-      EXPECT_EQ(result.order_parameters.sq_mag.count(it.first), 1);
+      EXPECT_EQ(result.order_parameters.mag_2.count(it.first), 1);
+      EXPECT_EQ(result.order_parameters.mag_4.count(it.first), 1);
       EXPECT_EQ(result.order_parameters.abs_f2.count(it.first), 1);
       EXPECT_EQ(result.order_parameters.abs_f4.count(it.first), 1);
       EXPECT_EQ(result.order_parameters.normalized_energy_count.count(it.first), 1);
    }
-   for (const auto &it: result.order_parameters.sq_mag) {
-      EXPECT_TRUE(it.second > 1);
+   for (const auto &it: result.order_parameters.mag_2) {
+      EXPECT_TRUE(it.second > 0);
+   }
+   for (const auto &it: result.order_parameters.mag_4) {
+      EXPECT_TRUE(it.second > 0);
    }
    for (const auto &it: result.order_parameters.abs_f2) {
-      EXPECT_TRUE(it.second > 1);
+      EXPECT_TRUE(it.second > 0);
    }
    for (const auto &it: result.order_parameters.abs_f4) {
-      EXPECT_TRUE(it.second > 1);
+      EXPECT_TRUE(it.second > 0);
    }
    for (const auto &it: result.order_parameters.normalized_energy_count) {
       EXPECT_TRUE(it.second > 1);

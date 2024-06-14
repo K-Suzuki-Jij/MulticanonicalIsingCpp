@@ -1,17 +1,44 @@
-from typing import Union
-
 import mpmath
 import numpy as np
-
-from muca.results.simulation_result import MulticanonicalResults, WangLandauResults
-
 
 class Analyzer:
 
     @classmethod
-    def calculate_internal_energy(
+    def calculate_expectation(
         cls,
-        data: Union[WangLandauResults, MulticanonicalResults],
+        energies: np.ndarray,
+        entropies: np.ndarray,
+        temperature_list: np.ndarray,
+        values: np.ndarray,
+    ) -> np.ndarray:
+        """Calculate the expectation value of a given observable.
+
+        Args:
+            energies (np.ndarray): The energies of the system.
+            entropies (np.ndarray): The entropies of the system.
+            temperature_list (np.ndarray): The list of temperatures to calculate the expectation value for.
+            values (np.ndarray): The values of the observable.
+
+        Returns:
+            np.ndarray: The expectation value of the observable for given temperatures.
+        """
+        result = np.zeros(len(temperature_list))
+        for i, temperature in enumerate(temperature_list):
+            exponents = -energies / temperature + entropies
+            exponents -= np.max(exponents)
+            partition_function = mpmath.mpf(0)
+            expectation = mpmath.mpf(0)
+            for j, s in enumerate(exponents):
+                partition_function += mpmath.exp(s)
+                expectation += values[j] * mpmath.exp(s)
+            result[i] = float(expectation / partition_function)
+        return result
+
+    @classmethod
+    def calculate_energy_expectation(
+        cls,
+        energies: np.ndarray,
+        entropies: np.ndarray,
         temperature_list: np.ndarray,
         power: int = 1,
     ) -> np.ndarray:
@@ -27,11 +54,11 @@ class Analyzer:
         """
         internal_energies = np.zeros(len(temperature_list))
         for i, temperature in enumerate(temperature_list):
-            exponents = -data.energies / temperature + data.entropies
+            exponents = -energies / temperature + entropies
             exponents -= np.max(exponents)
             partition_function = mpmath.mpf(0)
             expectation = mpmath.mpf(0)
-            for e, s in zip(data.energies, exponents):
+            for e, s in zip(energies, exponents):
                 partition_function += mpmath.exp(s)
                 expectation += (e**power) * mpmath.exp(s)
             internal_energies[i] = float(expectation / partition_function)
@@ -40,7 +67,8 @@ class Analyzer:
     @classmethod
     def calculate_heat_capacity(
         cls,
-        data: Union[WangLandauResults, MulticanonicalResults],
+        energies: np.ndarray,
+        entropies: np.ndarray,
         temperature_list: np.ndarray,
     ) -> np.ndarray:
         """Calculate the heat capacity of the system.
@@ -50,87 +78,6 @@ class Analyzer:
         Returns:
             np.ndarray: The heat capacity of the system for given temperatures.
         """
-        e = cls.calculate_internal_energy(data, temperature_list)
-        ee = cls.calculate_internal_energy(data, temperature_list, power=2)
+        e = cls.calculate_energy_expectation(energies, entropies, temperature_list)
+        ee = cls.calculate_energy_expectation(energies, entropies, temperature_list, power=2)
         return (ee - e**2) / (temperature_list**2)
-
-    @classmethod
-    def calculate_ordered_Q_squared_fourier_intensity(
-        cls,
-        data: Union[WangLandauResults, MulticanonicalResults],
-        temperature_list: np.ndarray,
-    ) -> np.ndarray:
-        """Calculate the order parameter from its distribution obtained from the simulation.
-        This is defined by the total of specific squared components from the absolute value of the Fourier transform of the spin configuration.
-
-        Args:
-            data (Union[WangLandauResults, MulticanonicalResults]): The data obtained from the simulation.
-            temperature_list (Union[np.ndarray, list[float]]): The list of temperatures to calculate the order parameter for.
-        Returns:
-            np.ndarray: The order parameter of the system.
-        """
-        intensity = np.zeros(len(temperature_list))
-        for i, temperature in enumerate(temperature_list):
-            exponents = -data.energies / temperature + data.entropies
-            exponents -= np.max(exponents)
-            partition_function = mpmath.mpf(0)
-            expectation = mpmath.mpf(0)
-            for j, s in enumerate(exponents):
-                partition_function += mpmath.exp(s)
-                expectation += data.order_parameters.abs_fourier_second[j] * mpmath.exp(
-                    s
-                )
-            intensity[i] = float(expectation / partition_function)
-        return intensity
-
-    @classmethod
-    def calculate_ordered_Q_quartic_fourier_intensity(
-        cls,
-        data: Union[WangLandauResults, MulticanonicalResults],
-        temperature_list: np.ndarray,
-    ) -> np.ndarray:
-        """Calculate the squared order parameter from its distribution obtained from the simulation.
-        Here the order parameter is defined by the total of specific squared components
-        from the absolute value of the Fourier transform of the spin configuration.
-
-        Args:
-            data (Union[WangLandauResults, MulticanonicalResults]): The data obtained from the simulation.
-            temperature_list (Union[np.ndarray, list[float]]): The list of temperatures to calculate the order parameter for.
-
-        Returns:
-            np.ndarray: The order parameter of the system.
-        """
-        intensity = np.zeros(len(temperature_list))
-        for i, temperature in enumerate(temperature_list):
-            exponents = -data.energies / temperature + data.entropies
-            exponents -= np.max(exponents)
-            partition_function = mpmath.mpf(0)
-            expectation = mpmath.mpf(0)
-            for j, s in enumerate(exponents):
-                partition_function += mpmath.exp(s)
-                expectation += data.order_parameters.abs_fourier_fourth[j] * mpmath.exp(
-                    s
-                )
-            intensity[i] = float(expectation / partition_function)
-        return intensity
-
-    @classmethod
-    def calculate_binder_cumulant(
-        cls,
-        data: Union[WangLandauResults, MulticanonicalResults],
-        temperature_list: np.ndarray,
-    ) -> np.ndarray:
-        """Calculate the Binder cumulant of the order parameter.
-        Here the order parameter is defined by the total of specific squared components
-        from the absolute value of the Fourier transform of the spin configuration.
-
-        Args:
-            data (Union[WangLandauResults, MulticanonicalResults]): The data obtained from the simulation.
-            temperature_list (Union[np.ndarray, list[float]]): The list of temperatures to calculate the order parameter for.
-
-        Returns:
-            np.ndarray: The Binder cumulant of the order parameter.
-        """
-        mm = cls.calculate_ordered_Q_squared_fourier_intensity(data, temperature_list)
-        mmmm = cls.calculate_ordered_Q_quartic_fourier_intensity(data, temperature_list)
-        return 1 - mmmm / (3 * mm**2)
