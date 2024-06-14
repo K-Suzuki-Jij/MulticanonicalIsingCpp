@@ -1,0 +1,13 @@
+[build-system]
+requires = [
+   'setuptools_scm[toml]', 
+   'setuptools',
+   'wheel',
+   'build',
+   'pybind11',
+   'scikit-build',
+   ]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "muca/_version.py"

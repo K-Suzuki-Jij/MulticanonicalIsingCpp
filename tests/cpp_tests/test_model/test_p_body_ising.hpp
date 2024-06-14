@@ -22,7 +22,8 @@ TEST(AlgorithmModel, PBodyTwoDimIsing) {
    EXPECT_EQ(model.Ly, Ly);
    EXPECT_EQ(model.spin, spin);
    EXPECT_EQ(model.spin_scale_factor, spin_scale_factor);
-   EXPECT_EQ(model.normalized_energy_range, std::make_pair(-2*Lx*Ly*3*3*3*3, 2*Lx*Ly*3*3*3*3));
+   EXPECT_EQ(model.normalized_energy_range.first, -2*Lx*Ly*3*3*3*3);
+   EXPECT_EQ(model.normalized_energy_range.second, 2*Lx*Ly*3*3*3*3);
 
 }
 

@@ -1,0 +1,64 @@
+name: C++ Test
+
+run-name: C++ tests
+
+on:
+  push:
+      branches:
+      - main
+  pull_request:
+      branches:    
+      - main
+  workflow_dispatch:
+
+jobs:
+  cpp-test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-14]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install requirements on MacOS
+        if: matrix.os == 'macos-latest' || matrix.os == 'macos-14'
+        run: |
+          brew install googletest eigen libomp
+
+      - name: Install requirements on Ubuntu
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt install libgtest-dev libeigen3-dev lcov
+
+      - name: Compile on MacOS
+        if: matrix.os == 'macos-latest' || matrix.os == 'macos-14'
+        run: |
+          g++ -Og -std=c++17 tests/cpp_tests/test_main.cpp -Xclang -fopenmp -lgtest -lomp -o tests/cpp_tests/cpp_test -I $(brew --prefix eigen)/include/eigen3/ -I $(brew --prefix libomp)/include -I $(brew --prefix googletest)/include -L $(brew --prefix libomp)/lib -L $(brew --prefix googletest)/lib
+
+      - name: Compile on Ubuntu
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          g++ -Og -std=c++17 --coverage tests/cpp_tests/test_main.cpp -fopenmp -lgtest -o tests/cpp_tests/cpp_test -I /usr/include/eigen3/
+
+      - name: Test
+        run: |
+          ./tests/cpp_tests/cpp_test
+
+      - name: Generate Coverage Report on Ubuntu
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          lcov --directory . --capture --output-file coverage.info # カバレッジデータを収集
+          lcov --remove coverage.info '/usr/*' '**/gtest/**' '**/tests/**' --output-file coverage.info # 余分なデータを除外
+          lcov --list coverage.info # カバレッジレポートの内容を表示（オプショナル）
+
+      - name: Upload coverage reports to Codecov
+        if: matrix.os == 'ubuntu-latest'
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.info
+          name: codecov-cpp
+          fail_ci_if_error: false
