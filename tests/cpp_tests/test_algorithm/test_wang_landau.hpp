@@ -78,7 +78,7 @@ TEST(AlgorithmWangLandau, BaseWangLandauError) {
 
 TEST(AlgorithmWangLandau, WangLandau) {
    const PBodyTwoDimIsing model(-2, 2, 4, 4, 0.5, 2);
-   const WangLandauParameters wl_parameters(1e-08, 100, 2, 0, 10000, 0.8, 0.5, 0.2);
+   const WangLandauParameters wl_parameters(1e-08, 100, 2, 0, 100000, 0.8, 0.5, 0.2);
    const auto result_list = WangLandau(model, wl_parameters, 2, true);
    
    EXPECT_EQ(result_list.size(), 2);
