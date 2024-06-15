@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdexcept>
-
+#include <limits>
 
 namespace cpp_muca {
 
@@ -11,7 +11,7 @@ struct WangLandauParameters {
                         const int convergence_check_interval,
                         const int num_divided_energy_range,
                         const std::size_t seed,
-                        const std::int64_t max_sweeps = 100000000,
+                        const std::int64_t max_sweeps = std::numeric_limits<std::int64_t>::max(),
                         const double flatness_criterion = 0.8,
                         const double reduce_rate = 0.5,
                         const double overlap_rate = 0.2):
