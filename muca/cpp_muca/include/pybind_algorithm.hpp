@@ -18,7 +18,7 @@ void PyBindWangLandauParameters(py::module &m) {
                 "convergence_check_interval"_a, 
                 "num_divided_energy_range"_a, 
                 "seed"_a,
-                "max_sweeps"_a=100000000, 
+                "max_sweeps"_a=std::numeric_limits<std::int64_t>::max(), 
                 "flatness_criterion"_a=0.8, 
                 "reduce_rate"_a=0.5, 
                 "overlap_rate"_a=0.2

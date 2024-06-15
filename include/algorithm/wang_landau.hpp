@@ -99,7 +99,7 @@ BaseWangLandauResults BaseWangLandau(const PBodyTwoDimIsing model,
    }
    
    if (!loop_breaker) {
-      std::runtime_error("Dose not converge.");
+      throw std::runtime_error("Dose not converge.");
    }
    
    return BaseWangLandauResults(entropy_dict,
