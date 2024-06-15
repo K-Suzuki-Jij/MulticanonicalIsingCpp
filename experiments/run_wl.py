@@ -18,7 +18,6 @@ wl_parameters = WangLandauParameters(
     overlap_rate=overlap_rate,
     flatness_criterion=flatness_criterion,
 )
-
 wl_results = WangLandau.run(
     model=model,
     parameters=wl_parameters,
@@ -30,22 +29,3 @@ wl_results.store_as_pickle(
     f"wl_p{p}_L{L}_S{S}_{modification_criterion}_{flatness_criterion}_{overlap_rate}.pkl"
 )
 
-
-muca_sweeps = 10 ** (len(str(wl_results.total_sweeps)))
-muca_parameters = MulticanonicalParameters(
-    num_sweeps=wl_results.total_sweeps,
-    num_divided_energy_range=wl_results.parameters.num_divided_energy_range,
-    overlap_rate=wl_results.parameters.overlap_rate,
-)
-
-muca_result = Multicanonical.multicanonical(
-    initial_data=wl_results,
-    parameters=muca_parameters,
-    num_threads=wl_results.parameters.num_divided_energy_range,
-    calculate_order_parameters=True,
-    backend="cpp",
-)
-
-muca_result.store_as_pickle(
-    f"muca_p{p}_L{L}_S{S}_{modification_criterion}_{flatness_criterion}_{overlap_rate}.pkl"
-)
