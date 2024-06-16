@@ -45,7 +45,7 @@ jobs:
 
       - name: Run tests
         run: |
-          python -m pytest -v --cov=compnal tests --cov-report=xml
+          python -m pytest -v --cov=muca tests --cov-report=xml
       
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3

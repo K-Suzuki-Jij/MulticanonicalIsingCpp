@@ -53,7 +53,6 @@ dmypy.json
 #Jijbench
 .jb_results
 .minto_results
-.compnal_results
 
 __pycache__
 
