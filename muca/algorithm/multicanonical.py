@@ -93,7 +93,7 @@ def _base_multicanonical(
 
 def _post_process(
     initial_data: WangLandauResults, result_list: list[BaseMulticanonicalResults]
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, OrderParameterResults, float]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, OrderParameters, float]:
     """Post-process the results of the multicanonical simulation.
     Merge the divided results and update the entropies.
 
@@ -121,10 +121,6 @@ def _post_process(
     energy_coeff = (
         abs(initial_data.model.J)
         * (initial_data.model.spin_scale_factor / 2) ** initial_data.model.p
-    )
-    order_parameters = order_parameters.to_order_parameter_results(energy_coeff)
-    order_parameters = AlgorithmUtil.merge_order_parameters(
-        order_parameters, initial_data.order_parameters
     )
 
     # Check if the energies are valid
@@ -221,6 +217,11 @@ class Multicanonical:
             energy_coeff,
         ) = _post_process(initial_data, result_list)
 
+        order_parameter_results = order_parameters.to_order_parameter_results(energy_coeff)
+        order_parameter_results = AlgorithmUtil.merge_order_parameters(
+            order_parameter_results, initial_data.order_parameters
+        )
+
         result = MulticanonicalResults(
             initial_data=initial_data,
             parameters=parameters,
@@ -228,7 +229,7 @@ class Multicanonical:
             energies=normalized_energies * energy_coeff,
             normalized_energies=normalized_energies,
             histogram=histograms,
-            order_parameters=order_parameters,
+            order_parameters=order_parameter_results,
             model=initial_data.model,
             info={
                 "simulation_time": end_simulation - start_simulation,
@@ -236,6 +237,7 @@ class Multicanonical:
                 "backend": "py",
                 "num_threads": num_threads,
                 "calculate_order_parameters": calculate_order_parameters,
+                "order_parameters": order_parameters, 
             },
         )
 
@@ -287,6 +289,11 @@ class Multicanonical:
             energy_coeff,
         ) = _post_process(initial_data, result_list)
 
+        order_parameter_results = order_parameters.to_order_parameter_results(energy_coeff)
+        order_parameter_results = AlgorithmUtil.merge_order_parameters(
+            order_parameter_results, initial_data.order_parameters
+        )
+
         result = MulticanonicalResults(
             initial_data=initial_data,
             parameters=parameters,
@@ -294,7 +301,7 @@ class Multicanonical:
             energies=normalized_energies * energy_coeff,
             normalized_energies=normalized_energies,
             histogram=histograms,
-            order_parameters=order_parameters,
+            order_parameters=order_parameter_results,
             model=initial_data.model,
             info={
                 "simulation_time": end_simulation - start_simulation,
@@ -302,6 +309,7 @@ class Multicanonical:
                 "backend": "cpp",
                 "num_threads": num_threads,
                 "calculate_order_parameters": calculate_order_parameters,
+                "order_parameters": order_parameters,
             },
         )
 

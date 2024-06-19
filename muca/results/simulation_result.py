@@ -1,7 +1,6 @@
 import pickle
 from dataclasses import dataclass
-from functools import reduce
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
 
@@ -104,7 +103,9 @@ class WangLandauResults:
         """
         with open(file_path, "rb") as f:
             return pickle.load(f)
-
+        
+    def generate_symmetrized_order_parameters(self) -> OrderParameterResults:
+        return _generate_symmetrized_order_parameters(self)
 
 @dataclass
 class MulticanonicalResults:
@@ -157,3 +158,36 @@ class MulticanonicalResults:
         """
         with open(file_path, "rb") as f:
             return pickle.load(f)
+    
+    def generate_symmetrized_order_parameters(self) -> OrderParameterResults:
+        return _generate_symmetrized_order_parameters(self)
+
+
+def _generate_symmetrized_order_parameters(results: Union[WangLandauResults, MulticanonicalResults]) -> OrderParameterResults:
+    op = results.info["order_parameters"].copy()
+    n_op = results.info["order_parameters"].copy()
+    n_op.clear()
+    minus_keys = [e for e in op.normalized_energy_count.keys() if e <= 0]
+    for e in minus_keys:
+        abs_f2 = op.abs_f2[e] + op.abs_f2[-e]
+        abs_f4 = op.abs_f4[e] + op.abs_f4[-e]
+        n_e_c = op.normalized_energy_count[e] + op.normalized_energy_count[-e]
+        n_op.abs_f2[e]  = abs_f2
+        n_op.abs_f2[-e] = abs_f2
+        n_op.abs_f4[e]  = abs_f4
+        n_op.abs_f4[-e] = abs_f4
+        n_op.normalized_energy_count[e] = n_e_c
+        n_op.normalized_energy_count[-e] = n_e_c
+    
+    # 磁化は対称化できないので一旦ダミーで入れておく
+    n_op.mag_2 = op.mag_2
+    n_op.mag_4 = op.mag_4
+
+    energy_coeff = abs(results.model.J) * (results.model.spin_scale_factor / 2) ** results.model.p
+    order_parameter_results = n_op.to_order_parameter_results(energy_coeff)
+
+    # もとあったオブジェクトをコピーしておく
+    order_parameter_results.squared_magnetization = results.order_parameters.squared_magnetization.copy()
+    order_parameter_results.forth_magnetization = results.order_parameters.forth_magnetization.copy()
+
+    return order_parameter_results

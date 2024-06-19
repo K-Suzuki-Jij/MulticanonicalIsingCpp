@@ -109,7 +109,7 @@ def _base_wang_landau(
 def _post_process(
     model: PBodyTwoDimIsing,
     result_list: list[BaseWangLandauResults],
-) -> tuple[np.ndarray, np.ndarray, OrderParameterResults, float]:
+) -> tuple[np.ndarray, np.ndarray, OrderParameters, float]:
     """Post-process the results of the Wang-Landau simulation.
 
     Args:
@@ -128,7 +128,6 @@ def _post_process(
         connect_edge=True,
     )
     energy_coeff = abs(model.J) * (model.spin_scale_factor / 2) ** model.p
-    order_parameters = order_parameters.to_order_parameter_results(energy_coeff)
 
     # Sort
     normalized_energies, entropies = zip(
@@ -208,7 +207,7 @@ class WangLandau:
             normalized_energies=normalized_energies,
             total_sweeps=sum([r.total_sweeps for r in result_list]),
             final_modification_factor=result_list[0].final_modification_factor,
-            order_parameters=order_parameters,
+            order_parameters=order_parameters.to_order_parameter_results(energy_coeff),
             model=model,
             info={
                 "simulation_time": end_simulation - start_simulation,
@@ -216,6 +215,7 @@ class WangLandau:
                 "backend": "py",
                 "num_threads": num_threads,
                 "calculate_order_parameters": calculate_order_parameters,
+                "order_parameters": order_parameters,
             },
         )
 
@@ -268,7 +268,7 @@ class WangLandau:
             normalized_energies=normalized_energies,
             total_sweeps=sum([r.total_sweeps for r in result_list]),
             final_modification_factor=result_list[0].final_modification_factor,
-            order_parameters=order_parameters,
+            order_parameters=order_parameters.to_order_parameter_results(energy_coeff),
             model=model,
             info={
                 "simulation_time": end_simulation - start_simulation,
@@ -276,6 +276,7 @@ class WangLandau:
                 "backend": "cpp",
                 "num_threads": num_threads,
                 "calculate_order_parameters": calculate_order_parameters,
+                "order_parameters": order_parameters,
             },
         )
 

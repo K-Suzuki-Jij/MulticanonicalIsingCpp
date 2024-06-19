@@ -5,6 +5,7 @@ from itertools import product
 from typing import Union
 
 import numpy as np
+import copy
 
 from muca.model.p_body_ising import PBodyTwoDimIsing
 from muca.results.simulation_result import OrderParameterResults
@@ -29,6 +30,28 @@ class OrderParameters:
     normalized_energy_count: dict[int, int] = field(
         default_factory=lambda: defaultdict(int)
     )
+
+    def clear(self) -> None:
+        """Clear the order parameters."""
+        self.mag_2.clear()
+        self.mag_4.clear()
+        self.abs_f2.clear()
+        self.abs_f4.clear()
+        self.normalized_energy_count.clear()
+
+    def copy(self) -> "OrderParameters":
+        """Copy the OrderParameters.
+
+        Returns:
+            OrderParameters: The copied OrderParameters.
+        """
+        return OrderParameters(
+            mag_2=copy.deepcopy(self.mag_2),
+            mag_4=copy.deepcopy(self.mag_4),
+            abs_f2=copy.deepcopy(self.abs_f2),
+            abs_f4=copy.deepcopy(self.abs_f4),
+            normalized_energy_count=copy.deepcopy(self.normalized_energy_count),
+        )
 
     def assign(self, normalized_energy: int, other: "OrderParameters") -> None:
         """Assign the values of the other OrderParameters to this OrderParameters.
