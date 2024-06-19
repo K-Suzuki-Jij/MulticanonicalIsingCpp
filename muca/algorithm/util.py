@@ -1,3 +1,4 @@
+import copy
 from collections import defaultdict
 from dataclasses import dataclass, field
 from functools import reduce
@@ -5,7 +6,6 @@ from itertools import product
 from typing import Union
 
 import numpy as np
-import copy
 
 from muca.model.p_body_ising import PBodyTwoDimIsing
 from muca.results.simulation_result import OrderParameterResults

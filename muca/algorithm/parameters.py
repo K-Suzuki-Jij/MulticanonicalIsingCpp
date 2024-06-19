@@ -26,7 +26,7 @@ class WangLandauParameters:
     flatness_criterion: float = 0.8
     seed: int = field(default_factory=lambda: random.randrange(2147483647))
     reduce_rate: float = 0.5
-    max_sweeps: int = 9223372036854775807 # int64_t max
+    max_sweeps: int = 9223372036854775807  # int64_t max
     num_divided_energy_range: int = 1
     overlap_rate: float = 0.2
 

@@ -217,7 +217,9 @@ class Multicanonical:
             energy_coeff,
         ) = _post_process(initial_data, result_list)
 
-        order_parameter_results = order_parameters.to_order_parameter_results(energy_coeff)
+        order_parameter_results = order_parameters.to_order_parameter_results(
+            energy_coeff
+        )
         order_parameter_results = AlgorithmUtil.merge_order_parameters(
             order_parameter_results, initial_data.order_parameters
         )
@@ -237,7 +239,7 @@ class Multicanonical:
                 "backend": "py",
                 "num_threads": num_threads,
                 "calculate_order_parameters": calculate_order_parameters,
-                "order_parameters": order_parameters, 
+                "order_parameters": order_parameters,
             },
         )
 
@@ -289,7 +291,9 @@ class Multicanonical:
             energy_coeff,
         ) = _post_process(initial_data, result_list)
 
-        order_parameter_results = order_parameters.to_order_parameter_results(energy_coeff)
+        order_parameter_results = order_parameters.to_order_parameter_results(
+            energy_coeff
+        )
         order_parameter_results = AlgorithmUtil.merge_order_parameters(
             order_parameter_results, initial_data.order_parameters
         )
