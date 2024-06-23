@@ -217,13 +217,6 @@ class Multicanonical:
             energy_coeff,
         ) = _post_process(initial_data, result_list)
 
-        order_parameter_results = order_parameters.to_order_parameter_results(
-            energy_coeff
-        )
-        order_parameter_results = AlgorithmUtil.merge_order_parameters(
-            order_parameter_results, initial_data.order_parameters
-        )
-
         result = MulticanonicalResults(
             initial_data=initial_data,
             parameters=parameters,
@@ -231,7 +224,7 @@ class Multicanonical:
             energies=normalized_energies * energy_coeff,
             normalized_energies=normalized_energies,
             histogram=histograms,
-            order_parameters=order_parameter_results,
+            order_parameters=order_parameters.to_order_parameter_results(energy_coeff),
             model=initial_data.model,
             info={
                 "simulation_time": end_simulation - start_simulation,
@@ -291,13 +284,6 @@ class Multicanonical:
             energy_coeff,
         ) = _post_process(initial_data, result_list)
 
-        order_parameter_results = order_parameters.to_order_parameter_results(
-            energy_coeff
-        )
-        order_parameter_results = AlgorithmUtil.merge_order_parameters(
-            order_parameter_results, initial_data.order_parameters
-        )
-
         result = MulticanonicalResults(
             initial_data=initial_data,
             parameters=parameters,
@@ -305,7 +291,7 @@ class Multicanonical:
             energies=normalized_energies * energy_coeff,
             normalized_energies=normalized_energies,
             histogram=histograms,
-            order_parameters=order_parameter_results,
+            order_parameters=order_parameters.to_order_parameter_results(energy_coeff),
             model=initial_data.model,
             info={
                 "simulation_time": end_simulation - start_simulation,
