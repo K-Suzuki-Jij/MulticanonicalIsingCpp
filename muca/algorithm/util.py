@@ -259,7 +259,11 @@ class AlgorithmUtil:
         for i in range(num_divided_energy_range):
             e_left = e_min + i * length * (1 - overlap_rate)
             e_right = e_left + length
-            divided_energy_range_list.append((e_left, e_right))
+            divided_energy_range_list.append([e_left, e_right])
+
+        # 数値誤差を考えて区間の端は改めて最小/最大エネルギーを登録する
+        divided_energy_range_list[0][0] = e_min
+        divided_energy_range_list[-1][1] = e_max
         return divided_energy_range_list
 
     @staticmethod
@@ -311,63 +315,6 @@ class AlgorithmUtil:
                 )
 
         return merged_data, merged_order_parameters
-
-    @staticmethod
-    def merge_order_parameters(
-        op_1: OrderParameterResults,
-        op_2: OrderParameterResults,
-    ) -> OrderParameterResults:
-
-        # If both are None, return empty results
-        if op_1.normalized_energies is None and op_2.normalized_energies is None:
-            return OrderParameterResults()
-
-        # If one of them is None, return the other
-        if op_1.normalized_energies is None and op_2.normalized_energies is not None:
-            return op_2
-        if op_1.normalized_energies is not None and op_2.normalized_energies is None:
-            return op_1
-
-        # If both are not None, merge them
-
-        # Convert to dict
-        sq = dict(zip(op_1.normalized_energies, op_1.squared_magnetization))
-        sq_sq = dict(zip(op_1.normalized_energies, op_1.forth_magnetization))
-        abs2 = dict(zip(op_1.normalized_energies, op_1.abs_fourier_second))
-        abs4 = dict(zip(op_1.normalized_energies, op_1.abs_fourier_fourth))
-        energies = dict(zip(op_1.normalized_energies, op_1.energies))
-
-        i_sq = dict(zip(op_2.normalized_energies, op_2.squared_magnetization))
-        i_sq_sq = dict(zip(op_2.normalized_energies, op_2.forth_magnetization))
-        i_abs2 = dict(zip(op_2.normalized_energies, op_2.abs_fourier_second))
-        i_abs4 = dict(zip(op_2.normalized_energies, op_2.abs_fourier_fourth))
-        i_energies = dict(zip(op_2.normalized_energies, op_2.energies))
-
-        # Merge
-        for e in i_sq.keys():
-            sq[e] = (sq[e] + i_sq[e]) * 0.5 if e in sq else i_sq[e]
-            sq_sq[e] = (sq_sq[e] + i_sq_sq[e]) * 0.5 if e in sq_sq else i_sq_sq[e]
-            abs2[e] = (abs2[e] + i_abs2[e]) * 0.5 if e in abs2 else i_abs2[e]
-            abs4[e] = (abs4[e] + i_abs4[e]) * 0.5 if e in abs4 else i_abs4[e]
-            energies[e] = energies[e] if e in energies else i_energies[e]
-
-        # Sort
-        _, sorted_sq = zip(*sorted(zip(energies.values(), sq.values())))
-        _, sorted_sq_sq = zip(*sorted(zip(energies.values(), sq_sq.values())))
-        _, sorted_abs2 = zip(*sorted(zip(energies.values(), abs2.values())))
-        _, sorted_abs4 = zip(*sorted(zip(energies.values(), abs4.values())))
-        sorted_energies, normalized_energies = zip(
-            *sorted(zip(energies.values(), energies.keys()))
-        )
-
-        return OrderParameterResults(
-            squared_magnetization=np.array(sorted_sq),
-            forth_magnetization=np.array(sorted_sq_sq),
-            abs_fourier_second=np.array(sorted_abs2),
-            abs_fourier_fourth=np.array(sorted_abs4),
-            energies=np.array(sorted_energies),
-            normalized_energies=np.array(normalized_energies),
-        )
 
     @staticmethod
     def scale_entropies(entropies: list, model: PBodyTwoDimIsing) -> np.ndarray:

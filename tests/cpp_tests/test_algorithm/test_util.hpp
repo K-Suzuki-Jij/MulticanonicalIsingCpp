@@ -187,26 +187,30 @@ TEST(AlgorithmUtil, GenerateEnergyRangeList) {
    EXPECT_EQ(result_1[1].second, 10 );
    
    const auto result_2 = GenerateEnergyRangeList(std::pair<int, int>{-10, 10}, 3, 0);
-   EXPECT_NEAR(result_2[0].first,  -10.0  , 1e-10);
+   EXPECT_EQ(result_2[0].first,  -10.0);
    EXPECT_NEAR(result_2[0].second, -10.0/3, 1e-10);
    EXPECT_NEAR(result_2[1].first,  -10.0/3, 1e-10);
    EXPECT_NEAR(result_2[1].second, 10.0/3 , 1e-10);
    EXPECT_NEAR(result_2[2].first,  10.0/3 , 1e-10);
-   EXPECT_NEAR(result_2[2].second, 10.0   , 1e-10);
+   EXPECT_EQ(result_2[2].second, 10.0);
    
    const auto result_3 = GenerateEnergyRangeList(std::pair<int, int>{-10, 10}, 2, 0.4);
-   EXPECT_DOUBLE_EQ(result_3[0].first,  -10 );
+   EXPECT_EQ(result_3[0].first,  -10);
    EXPECT_DOUBLE_EQ(result_3[0].second,  2.5);
    EXPECT_DOUBLE_EQ(result_3[1].first,  -2.5);
-   EXPECT_DOUBLE_EQ(result_3[1].second,  10 );
+   EXPECT_EQ(result_3[1].second,  10);
    
    const auto result_4 = GenerateEnergyRangeList(std::pair<int, int>{-10, 10}, 3, 0.4);
-   EXPECT_NEAR(result_4[0].first,  -10             , 1e-10);
+   EXPECT_EQ(result_4[0].first,  -10);
    EXPECT_NEAR(result_4[0].second, -10 + 20/2.2    , 1e-10);
    EXPECT_NEAR(result_4[1].first,  -10 + 0.6*20/2.2, 1e-10);
    EXPECT_NEAR(result_4[1].second, -10 + 1.6*20/2.2, 1e-10);
    EXPECT_NEAR(result_4[2].first,  -10 + 120.0/11  , 1e-10);
-   EXPECT_NEAR(result_4[2].second, -10 + 2.2*20/2.2, 1e-10);
+   EXPECT_EQ(result_4[2].second, 10);
+
+   const auto result_5 = GenerateEnergyRangeList(std::pair<int, int>{-11, 11}, 7, 0.4);
+   EXPECT_EQ(result_5[0].first , -11);
+   EXPECT_EQ(result_5[6].second, 11);
 }
 
 };

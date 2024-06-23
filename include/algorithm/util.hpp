@@ -191,6 +191,10 @@ GenerateInitialState(const PBodyTwoDimIsing &model,
       const double e_right = e_left + length;
       divided_energy_range_list.push_back(std::make_pair(e_left, e_right));
    }
+
+   // 数値誤差を考えて区間の端は改めて最小/最大エネルギーを登録する
+   divided_energy_range_list.front().first = e_min;
+   divided_energy_range_list.back().second = e_max;
    return divided_energy_range_list;
  }
 
