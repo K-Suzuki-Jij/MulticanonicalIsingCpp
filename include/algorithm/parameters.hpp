@@ -5,6 +5,11 @@
 
 namespace cpp_muca {
 
+enum class UpdateMethod {
+   METROPOLIS,
+   HEAT_BATH,
+};
+
 struct WangLandauParameters {
 
    WangLandauParameters(const double modification_criterion,
@@ -14,7 +19,8 @@ struct WangLandauParameters {
                         const std::int64_t max_sweeps = std::numeric_limits<std::int64_t>::max(),
                         const double flatness_criterion = 0.8,
                         const double reduce_rate = 0.5,
-                        const double overlap_rate = 0.2):
+                        const double overlap_rate = 0.2,
+                        const UpdateMethod update_method = UpdateMethod::METROPOLIS):
    modification_criterion(modification_criterion),
    convergence_check_interval(convergence_check_interval),
    num_divided_energy_range(num_divided_energy_range),
@@ -22,7 +28,8 @@ struct WangLandauParameters {
    max_sweeps(max_sweeps),
    flatness_criterion(flatness_criterion),
    reduce_rate(reduce_rate),   
-   overlap_rate(overlap_rate) {
+   overlap_rate(overlap_rate),
+   update_method(update_method) {
       if (this->modification_criterion <= 0.0 || this->modification_criterion > 1.0) {
          throw std::invalid_argument("modification_criterion must be in the range (0, 1].");
       }
@@ -54,6 +61,7 @@ struct WangLandauParameters {
    const double flatness_criterion = 0.8;
    const double reduce_rate = 0.5;
    const double overlap_rate = 0.2;
+   const UpdateMethod update_method = UpdateMethod::METROPOLIS;
 };
 
 struct MulticanonicalParameters {

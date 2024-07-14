@@ -9,11 +9,17 @@ namespace py = pybind11;
 //The following does not bring in anything else from the pybind11 namespace except for literals.
 using namespace pybind11::literals;
 
+void PyBindUpdateMethod(py::module &m) {
+   py::enum_<UpdateMethod>(m, "UpdateMethod")
+      .value("METROPOLIS", UpdateMethod::METROPOLIS)
+      .value("HEAT_BATH", UpdateMethod::HEAT_BATH);
+}
+
 void PyBindWangLandauParameters(py::module &m) {
    auto py_class = py::class_<WangLandauParameters>(m, "WangLandauParameters", py::module_local());
 
    // Constructors
-   py_class.def(py::init<const double, const int, const int, const std::size_t, const std::int64_t, const double, const double, const double>(),
+   py_class.def(py::init<const double, const int, const int, const std::size_t, const std::int64_t, const double, const double, const double, const UpdateMethod>(),
                 "modification_criterion"_a, 
                 "convergence_check_interval"_a, 
                 "num_divided_energy_range"_a, 
@@ -21,7 +27,8 @@ void PyBindWangLandauParameters(py::module &m) {
                 "max_sweeps"_a=std::numeric_limits<std::int64_t>::max(), 
                 "flatness_criterion"_a=0.8, 
                 "reduce_rate"_a=0.5, 
-                "overlap_rate"_a=0.2
+                "overlap_rate"_a=0.2,
+                "update_method"_a=UpdateMethod::METROPOLIS
                 );
 
    //Public Member Variables
@@ -33,6 +40,7 @@ void PyBindWangLandauParameters(py::module &m) {
    py_class.def_readonly("flatness_criterion", &WangLandauParameters::flatness_criterion);
    py_class.def_readonly("reduce_rate", &WangLandauParameters::reduce_rate);
    py_class.def_readonly("overlap_rate", &WangLandauParameters::overlap_rate);
+   py_class.def_readonly("update_method", &WangLandauParameters::update_method);
    
 }
 

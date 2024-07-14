@@ -9,7 +9,7 @@ setup_requires = [
     "numpy",
     "mpmath",
     "matplotlib",
-    "pybind11 >=2.12.0, < 2.13.0",
+    "pybind11 >=2.12.0, < 2.14.0",
     "cmake > 3.20",
     "scikit-build > 0.16.0",
 ]
