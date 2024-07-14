@@ -17,9 +17,12 @@ def cast_from_py_model(model: PBodyTwoDimIsing) -> cpp_muca.cpp_model.PBodyTwoDi
 def cast_from_py_wang_landau_parameters(
     parameters: WangLandauParameters,
 ) -> cpp_muca.cpp_algorithm.WangLandauParameters:
-    update_method = cpp_muca.cpp_algorithm.UpdateMethod.METROPOLIS
-    if parameters.update_method == UpdateMethod.HEAT_BATH:
+    if parameters.update_method in [UpdateMethod.METROPOLIS, "METROPOLIS"]:
+        update_method = cpp_muca.cpp_algorithm.UpdateMethod.METROPOLIS
+    elif parameters.update_method in [UpdateMethod.HEAT_BATH, "HEAT_BATH"]:
         update_method = cpp_muca.cpp_algorithm.UpdateMethod.HEAT_BATH
+    else:
+        raise ValueError("Invalid update method")
     return cpp_muca.cpp_algorithm.WangLandauParameters(
         modification_criterion=parameters.modification_criterion,
         convergence_check_interval=parameters.convergence_check_interval,
