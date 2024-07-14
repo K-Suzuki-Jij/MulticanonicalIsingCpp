@@ -25,8 +25,8 @@ TEST(AlgorithmWangLandau, BaseWangLandauResults) {
 
 TEST(AlgorithmWangLandau, BaseWangLandauMETROPOLIS) {
    const PBodyTwoDimIsing model(-1.0, 3, 6, 6, 1, 1);
-   const WangLandauParameters wl_parameters(1e-02, 100, 1, 0);
-   const auto result = BaseWangLandau(model, wl_parameters, 0, {-2*6*6*2*2*2, 0.0}, true, UpdateMethod::METROPOLIS);
+   const WangLandauParameters wl_parameters(1e-02, 100, 1, 0, std::numeric_limits<std::int64_t>::max(), 0.8, 0.5, 0.2, UpdateMethod::METROPOLIS);
+   const auto result = BaseWangLandau(model, wl_parameters, 0, {-2*6*6*2*2*2, 0.0}, true);
    
    EXPECT_TRUE(result.final_modification_factor < 1e-02);
    EXPECT_EQ(result.order_parameters.mag_2.size(), result.entropy_dict.size());
@@ -72,8 +72,8 @@ TEST(AlgorithmWangLandau, BaseWangLandauMETROPOLIS) {
 
 TEST(AlgorithmWangLandau, BaseWangLandauHEATBATH) {
    const PBodyTwoDimIsing model(-1.0, 3, 6, 6, 1, 1);
-   const WangLandauParameters wl_parameters(1e-02, 100, 1, 0);
-   const auto result = BaseWangLandau(model, wl_parameters, 0, {-2*6*6*2*2*2, 0.0}, true, UpdateMethod::HEAT_BATH);
+   const WangLandauParameters wl_parameters(1e-02, 100, 1, 0, std::numeric_limits<std::int64_t>::max(), 0.8, 0.5, 0.2, UpdateMethod::HEAT_BATH);
+   const auto result = BaseWangLandau(model, wl_parameters, 0, {-2*6*6*2*2*2, 0.0}, true);
    
    EXPECT_TRUE(result.final_modification_factor < 1e-02);
    EXPECT_EQ(result.order_parameters.mag_2.size(), result.entropy_dict.size());

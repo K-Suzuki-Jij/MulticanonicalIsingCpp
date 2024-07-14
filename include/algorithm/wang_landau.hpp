@@ -28,8 +28,8 @@ BaseWangLandauResults BaseWangLandau(const PBodyTwoDimIsing model,
                                      const WangLandauParameters parameters,
                                      const std::size_t seed,
                                      const std::pair<double, double> normalized_energy_range,
-                                     const bool calculate_order_parameters,
-                                     const UpdateMethod update_method = UpdateMethod::METROPOLIS) {
+                                     const bool calculate_order_parameters
+                                     ) {
 
    std::mt19937_64 engine(seed);
    const double e_min = normalized_energy_range.first;
@@ -54,7 +54,7 @@ BaseWangLandauResults BaseWangLandau(const PBodyTwoDimIsing model,
          break;
       }
 
-      if (update_method == UpdateMethod::METROPOLIS) {
+      if (parameters.update_method == UpdateMethod::METROPOLIS) {
          for (int x = 0; x < model.Lx; ++x) {
             for (int y = 0; y < model.Ly; ++y) {
                int new_spin_value = 2*dist_new_spins(engine) - twice_spin_magnitude;
@@ -82,7 +82,7 @@ BaseWangLandauResults BaseWangLandau(const PBodyTwoDimIsing model,
             }
          }
       }
-      else if (update_method == UpdateMethod::HEAT_BATH) {
+      else if (parameters.update_method == UpdateMethod::HEAT_BATH) {
          for (int x = 0; x < model.Lx; ++x) {
             for (int y = 0; y < model.Ly; ++y) {
                // Calculate probability

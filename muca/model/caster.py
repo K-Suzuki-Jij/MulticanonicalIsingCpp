@@ -1,5 +1,5 @@
 from muca import cpp_muca
-from muca.algorithm.parameters import MulticanonicalParameters, WangLandauParameters
+from muca.algorithm.parameters import MulticanonicalParameters, WangLandauParameters, UpdateMethod
 from muca.model.p_body_ising import PBodyTwoDimIsing
 
 
@@ -17,6 +17,9 @@ def cast_from_py_model(model: PBodyTwoDimIsing) -> cpp_muca.cpp_model.PBodyTwoDi
 def cast_from_py_wang_landau_parameters(
     parameters: WangLandauParameters,
 ) -> cpp_muca.cpp_algorithm.WangLandauParameters:
+    update_method = cpp_muca.cpp_algorithm.UpdateMethod.METROPOLIS
+    if parameters.update_method == UpdateMethod.HEAT_BATH:
+        update_method = cpp_muca.cpp_algorithm.UpdateMethod.HEAT_BATH
     return cpp_muca.cpp_algorithm.WangLandauParameters(
         modification_criterion=parameters.modification_criterion,
         convergence_check_interval=parameters.convergence_check_interval,
@@ -26,6 +29,7 @@ def cast_from_py_wang_landau_parameters(
         flatness_criterion=parameters.flatness_criterion,
         reduce_rate=parameters.reduce_rate,
         overlap_rate=parameters.overlap_rate,
+        update_method=update_method,
     )
 
 

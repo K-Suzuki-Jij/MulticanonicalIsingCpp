@@ -1,6 +1,14 @@
 import random
 from dataclasses import dataclass, field
+from enum import Enum
 
+
+class UpdateMethod(Enum):
+    METROPOLIS = "METROPOLIS"
+    HEAT_BATH = "HEAT_BATH"
+
+    def __str__(self):
+        return self.value
 
 @dataclass
 class WangLandauParameters:
@@ -29,6 +37,7 @@ class WangLandauParameters:
     max_sweeps: int = 9223372036854775807  # int64_t max
     num_divided_energy_range: int = 1
     overlap_rate: float = 0.2
+    update_method: UpdateMethod = UpdateMethod.METROPOLIS
 
     def __post_init__(self):
         # Check if the types are valid
