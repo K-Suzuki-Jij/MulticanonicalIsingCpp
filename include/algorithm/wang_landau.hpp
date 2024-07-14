@@ -28,7 +28,8 @@ BaseWangLandauResults BaseWangLandau(const PBodyTwoDimIsing model,
                                      const WangLandauParameters parameters,
                                      const std::size_t seed,
                                      const std::pair<double, double> normalized_energy_range,
-                                     const bool calculate_order_parameters) {
+                                     const bool calculate_order_parameters,
+                                     const UpdateMethod update_method = UpdateMethod::METROPOLIS) {
 
    std::mt19937_64 engine(seed);
    const double e_min = normalized_energy_range.first;
@@ -36,6 +37,7 @@ BaseWangLandauResults BaseWangLandau(const PBodyTwoDimIsing model,
    const int twice_spin_magnitude = static_cast<int>(2*model.spin);
    std::vector<std::vector<int>> twice_spins = GenerateInitialState(model, normalized_energy_range, engine());
    std::vector<std::vector<int>> dE = model.MakeEnergyDifference(twice_spins);
+   std::vector<double> prob_list(twice_spin_magnitude + 1, 1.0);
    std::unordered_map<int, std::int64_t> histogram_dict;
    std::unordered_map<int, double> entropy_dict;
    double diff = 1.0;
@@ -52,16 +54,76 @@ BaseWangLandauResults BaseWangLandau(const PBodyTwoDimIsing model,
          break;
       }
 
-      for (int x = 0; x < model.Lx; ++x) {
-         for (int y = 0; y < model.Ly; ++y) {
-            int new_spin_value = 2*dist_new_spins(engine) - twice_spin_magnitude;
-            if (twice_spins[x][y] <= new_spin_value) {
-               new_spin_value += 2;
+      if (update_method == UpdateMethod::METROPOLIS) {
+         for (int x = 0; x < model.Lx; ++x) {
+            for (int y = 0; y < model.Ly; ++y) {
+               int new_spin_value = 2*dist_new_spins(engine) - twice_spin_magnitude;
+               if (twice_spins[x][y] <= new_spin_value) {
+                  new_spin_value += 2;
+               }
+               const int new_normalized_energy = normalized_energy + dE[x][y]*(new_spin_value - twice_spins[x][y]);
+               if (e_min <= new_normalized_energy && new_normalized_energy <= e_max) {
+                  const double dS = entropy_dict[new_normalized_energy] - entropy_dict[normalized_energy];
+                  if (dS <= 0.0 || ud(engine) < std::exp(-dS)) {
+                     if (calculate_order_parameters) {
+                        order_parameter_counter.UpdateFourier(new_spin_value - twice_spins[x][y], x, y);
+                     }
+                     model.UpdateEnergyDifference(dE, new_spin_value, x, y, twice_spins);
+                     twice_spins[x][y] = new_spin_value;
+                     normalized_energy = new_normalized_energy;
+                  }
+               }
+               entropy_dict[normalized_energy] += diff;
+               histogram_dict[normalized_energy] += 1;
+
+               if (calculate_order_parameters) {
+                  order_parameter_counter.UpdateOrderParameters(normalized_energy);
+               }
             }
-            const int new_normalized_energy = normalized_energy + dE[x][y]*(new_spin_value - twice_spins[x][y]);
-            if (e_min <= new_normalized_energy && new_normalized_energy <= e_max) {
-               const double dS = entropy_dict[new_normalized_energy] - entropy_dict[normalized_energy];
-               if (dS <= 0.0 || ud(engine) < std::exp(-dS)) {
+         }
+      }
+      else if (update_method == UpdateMethod::HEAT_BATH) {
+         for (int x = 0; x < model.Lx; ++x) {
+            for (int y = 0; y < model.Ly; ++y) {
+               // Calculate probability
+               double z = 0.0;
+               for (int state = 0; state <= twice_spin_magnitude; ++state) {
+                  const int new_spin_value = 2*state - twice_spin_magnitude;
+                  const int new_normalized_energy = normalized_energy + dE[x][y]*(new_spin_value - twice_spins[x][y]);
+                  if (e_min <= new_normalized_energy && new_normalized_energy <= e_max) {
+                     const double dS = entropy_dict[new_normalized_energy] - entropy_dict[normalized_energy];
+                     prob_list[state] = std::exp(-dS);
+                  }
+                  else {
+                     prob_list[state] = 0.0;
+                  }
+                  z += prob_list[state];
+               }
+
+               if (z == 0.0) {
+                  throw std::runtime_error("Probability is zero.");
+               }
+               // Select new spin value
+               z = 1.0/z;
+               double prob_sum = 0.0;
+               const double dist = ud(engine);
+               int selected_state = -1;
+               for (std::int32_t state = 0; state <= twice_spin_magnitude; ++state) {
+                  prob_sum += z*prob_list[state];
+                  if (dist < prob_sum) {
+                     selected_state = state;
+                     break;
+                  }
+               }
+
+               // Check if the selected state is valid
+               if (prob_list[selected_state] == 0.0) {
+                  throw std::runtime_error("Invalid state selected.");
+               }
+
+               const int new_spin_value = 2*selected_state - twice_spin_magnitude;
+               const int new_normalized_energy = normalized_energy + dE[x][y]*(new_spin_value - twice_spins[x][y]);
+               if (new_normalized_energy != normalized_energy) {
                   if (calculate_order_parameters) {
                      order_parameter_counter.UpdateFourier(new_spin_value - twice_spins[x][y], x, y);
                   }
@@ -69,16 +131,19 @@ BaseWangLandauResults BaseWangLandau(const PBodyTwoDimIsing model,
                   twice_spins[x][y] = new_spin_value;
                   normalized_energy = new_normalized_energy;
                }
-            }
-            entropy_dict[normalized_energy] += diff;
-            histogram_dict[normalized_energy] += 1;
+               entropy_dict[normalized_energy] += diff;
+               histogram_dict[normalized_energy] += 1;
 
-            if (calculate_order_parameters) {
-               order_parameter_counter.UpdateOrderParameters(normalized_energy);
+               if (calculate_order_parameters) {
+                  order_parameter_counter.UpdateOrderParameters(normalized_energy);
+               }
             }
          }
       }
-
+      else {
+         throw std::invalid_argument("Invalid update method.");
+      }
+      
       // Check if the histogram is flat
       if (sweep%parameters.convergence_check_interval == 0) {
          const double hist_min = std::min_element(histogram_dict.begin(), histogram_dict.end(), [](const auto &a, const auto &b) {

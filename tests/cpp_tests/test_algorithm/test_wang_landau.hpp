@@ -23,10 +23,57 @@ TEST(AlgorithmWangLandau, BaseWangLandauResults) {
 
 }
 
-TEST(AlgorithmWangLandau, BaseWangLandau) {
+TEST(AlgorithmWangLandau, BaseWangLandauMETROPOLIS) {
    const PBodyTwoDimIsing model(-1.0, 3, 6, 6, 1, 1);
    const WangLandauParameters wl_parameters(1e-02, 100, 1, 0);
-   const auto result = BaseWangLandau(model, wl_parameters, 0, {-2*6*6*2*2*2, 0.0}, true);
+   const auto result = BaseWangLandau(model, wl_parameters, 0, {-2*6*6*2*2*2, 0.0}, true, UpdateMethod::METROPOLIS);
+   
+   EXPECT_TRUE(result.final_modification_factor < 1e-02);
+   EXPECT_EQ(result.order_parameters.mag_2.size(), result.entropy_dict.size());
+   EXPECT_EQ(result.order_parameters.mag_4.size(), result.entropy_dict.size());
+   EXPECT_EQ(result.order_parameters.abs_f2.size(), result.entropy_dict.size());
+   EXPECT_EQ(result.order_parameters.abs_f4.size(), result.entropy_dict.size());
+   EXPECT_EQ(result.order_parameters.normalized_energy_count.size(), result.entropy_dict.size());
+   
+   const auto min_key = [](const auto &a, const auto &b) {return a.first < b.first;};
+   const int hist_min = std::min_element(result.entropy_dict.begin(),
+                                         result.entropy_dict.end(),
+                                         min_key)->first;
+   const int hist_max = std::max_element(result.entropy_dict.begin(),
+                                         result.entropy_dict.end(),
+                                         min_key)->first;
+   
+   EXPECT_EQ(hist_min, -2*6*6*2*2*2);
+   EXPECT_EQ(hist_max, 0);
+   for (const auto &it: result.entropy_dict) {
+      EXPECT_TRUE(it.second > 0);
+      EXPECT_EQ(result.order_parameters.mag_2.count(it.first), 1);
+      EXPECT_EQ(result.order_parameters.mag_4.count(it.first), 1);
+      EXPECT_EQ(result.order_parameters.abs_f2.count(it.first), 1);
+      EXPECT_EQ(result.order_parameters.abs_f4.count(it.first), 1);
+      EXPECT_EQ(result.order_parameters.normalized_energy_count.count(it.first), 1);
+   }
+   for (const auto &it: result.order_parameters.mag_2) {
+      EXPECT_TRUE(it.second > 0);
+   }
+   for (const auto &it: result.order_parameters.mag_4) {
+      EXPECT_TRUE(it.second > 0);
+   }
+   for (const auto &it: result.order_parameters.abs_f2) {
+      EXPECT_TRUE(it.second > 0);
+   }
+   for (const auto &it: result.order_parameters.abs_f4) {
+      EXPECT_TRUE(it.second > 0);
+   }
+   for (const auto &it: result.order_parameters.normalized_energy_count) {
+      EXPECT_TRUE(it.second > 1);
+   }
+}
+
+TEST(AlgorithmWangLandau, BaseWangLandauHEATBATH) {
+   const PBodyTwoDimIsing model(-1.0, 3, 6, 6, 1, 1);
+   const WangLandauParameters wl_parameters(1e-02, 100, 1, 0);
+   const auto result = BaseWangLandau(model, wl_parameters, 0, {-2*6*6*2*2*2, 0.0}, true, UpdateMethod::HEAT_BATH);
    
    EXPECT_TRUE(result.final_modification_factor < 1e-02);
    EXPECT_EQ(result.order_parameters.mag_2.size(), result.entropy_dict.size());

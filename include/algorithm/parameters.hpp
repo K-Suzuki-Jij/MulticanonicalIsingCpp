@@ -5,6 +5,11 @@
 
 namespace cpp_muca {
 
+enum class UpdateMethod {
+   METROPOLIS,
+   HEAT_BATH,
+};
+
 struct WangLandauParameters {
 
    WangLandauParameters(const double modification_criterion,
