@@ -90,3 +90,36 @@ def test_wang_landau_cpp():
     assert (result.order_parameters.normalized_energies == ref.order_parameters.normalized_energies).all()
     assert result.model == model
     assert abs(result.entropies[0] - np.log(16))/np.log(16) < 0.1
+
+def test_wang_landau_cpp_symmetric():
+    model = PBodyTwoDimIsing(J=-1, p=3, Lx=6, Ly=6, spin=0.5, spin_scale_factor=2)
+    parameters = WangLandauParameters(
+        modification_criterion=1e-12,
+        convergence_check_interval=100,
+        num_divided_energy_range=1,
+        overlap_rate = 0.4,
+        seed=0,
+        flatness_criterion = 0.9,
+    )
+    result = WangLandau.run(
+        model=model,
+        parameters=parameters,
+        num_threads=1,
+        calculate_order_parameters=False,
+        backend = "cpp",
+        symmetric_calculation=True
+    )
+    ref = WangLandauResults.load_from_pickle("./tests/data/wl_p3_L6_S0.5.pkl")
+    assert result.parameters == parameters
+    assert result.entropies.size == ref.entropies.size
+    assert (result.energies == ref.energies).all()
+    assert (result.normalized_energies == ref.normalized_energies).all()
+    assert isinstance(result.total_sweeps, int)
+    assert result.final_modification_factor <= 1e-02
+    assert result.order_parameters.squared_magnetization == None
+    assert result.order_parameters.abs_fourier_second == None
+    assert result.order_parameters.abs_fourier_fourth == None
+    assert result.order_parameters.energies == None
+    assert result.order_parameters.normalized_energies == None
+    assert result.model == model
+    assert abs(result.entropies[0] - np.log(16))/np.log(16) < 0.1

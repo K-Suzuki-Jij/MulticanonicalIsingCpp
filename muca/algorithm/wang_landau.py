@@ -9,7 +9,7 @@ from typing import Optional
 import numpy as np
 
 from muca import cpp_muca
-from muca.algorithm.parameters import WangLandauParameters
+from muca.algorithm.parameters import WangLandauParameters, UpdateMethod
 from muca.algorithm.util import AlgorithmUtil, OrderParameterCounter, OrderParameters
 from muca.model.caster import cast_from_py_model, cast_from_py_wang_landau_parameters
 from muca.model.p_body_ising import PBodyTwoDimIsing
@@ -279,6 +279,71 @@ class WangLandau:
                 "order_parameters": order_parameters,
             },
         )
+    
+    @staticmethod
+    def wang_landau_cpp_symmetric(
+        model: PBodyTwoDimIsing,
+        parameters: WangLandauParameters,
+    ) -> WangLandauResults:
+        """Run a Wang-Landau simulation with using symmetry of the system.
+
+        Args:
+            model (PBodyTwoDimIsing): The model.
+            parameters (WangLandauParameters): The parameters for the simulation.
+
+        Returns:
+            WangLandauResults: The results of the simulation.
+        """
+        start_wang_landau = time.perf_counter()
+
+        # Check if the parameters are valid
+        if parameters.num_divided_energy_range != 1:
+            raise ValueError(
+                "The number of divided energy range must be 1 for symmetric Wang-Landau simulation."
+            )
+        if parameters.update_method not in [UpdateMethod.METROPOLIS, "METROPOLIS"]:
+            raise ValueError(
+                "The update method must be Metropolis for symmetric Wang-Landau simulation."
+            )
+
+        # Run the simulation
+        print("Running symmetric Wang-Landau simulation by cpp ...", flush=True)
+        start_simulation = time.perf_counter()
+        result = cpp_muca.cpp_algorithm.run_wang_landau_symmetric(
+            model=cast_from_py_model(model),
+            parameters=cast_from_py_wang_landau_parameters(parameters),
+        )
+        end_simulation = time.perf_counter()
+        print(
+            f"Done simulation ({round(end_simulation - start_simulation, 1)}) [sec] by cpp",
+            flush=True,
+        )
+
+        (
+            entropies,
+            normalized_energies,
+            order_parameters,
+            energy_coeff,
+        ) = _post_process(model, [result])
+
+        return WangLandauResults(
+            parameters=parameters,
+            entropies=entropies,
+            energies=normalized_energies * energy_coeff,
+            normalized_energies=normalized_energies,
+            total_sweeps=result.total_sweeps,
+            final_modification_factor=result.final_modification_factor,
+            order_parameters=order_parameters.to_order_parameter_results(energy_coeff),
+            model=model,
+            info={
+                "simulation_time": end_simulation - start_simulation,
+                "total_time": time.perf_counter() - start_wang_landau,
+                "backend": "cpp",
+                "num_threads": 1,
+                "calculate_order_parameters": False,
+                "order_parameters": order_parameters,
+            },
+        )
 
     @classmethod
     def run(
@@ -288,6 +353,7 @@ class WangLandau:
         num_threads: int = 1,
         calculate_order_parameters: bool = True,
         backend: str = "py",
+        symmetric_calculation: bool = False,
     ) -> WangLandauResults:
         """Run a Wang-Landau simulation.
 
@@ -301,19 +367,28 @@ class WangLandau:
         Returns:
             WangLandauResults: The results of the simulation.
         """
-        if backend == "py":
-            return cls.wang_landau_py(
-                model=model,
-                parameters=parameters,
-                num_threads=num_threads,
-                calculate_order_parameters=calculate_order_parameters,
-            )
-        elif backend == "cpp":
-            return cls.wang_landau_cpp(
-                model=model,
-                parameters=parameters,
-                num_threads=num_threads,
-                calculate_order_parameters=calculate_order_parameters,
-            )
+        if symmetric_calculation:
+            if backend == "py":
+                raise ValueError("Symmetric calculation is only supported by cpp backend.")
+            if num_threads != 1:
+                raise ValueError("Symmetric calculation is only supported by single thread.")
+            if calculate_order_parameters:
+                raise ValueError("Symmetric calculation is only supported without order parameters.")
+            return cls.wang_landau_cpp_symmetric(model=model, parameters=parameters)
         else:
-            raise ValueError(f"Invalid backend: {backend}")
+            if backend == "py":
+                return cls.wang_landau_py(
+                    model=model,
+                    parameters=parameters,
+                    num_threads=num_threads,
+                    calculate_order_parameters=calculate_order_parameters,
+                )
+            elif backend == "cpp":
+                return cls.wang_landau_cpp(
+                    model=model,
+                    parameters=parameters,
+                    num_threads=num_threads,
+                    calculate_order_parameters=calculate_order_parameters,
+                )
+            else:
+                raise ValueError(f"Invalid backend: {backend}")
