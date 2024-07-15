@@ -85,6 +85,7 @@ void PyBindOrderParameters(py::module &m) {
 
 void PyBindWangLandau(py::module &m) {
    m.def("run_wang_landau", &WangLandau, "model"_a, "parameters"_a, "num_threads"_a, "calculate_order_parameters"_a);
+   m.def("run_wang_landau_symmetric", &WangLandauSymmetric, "model"_a, "parameters"_a);
 }
 
 void PyBindMulticanonicalParameters(py::module &m) {

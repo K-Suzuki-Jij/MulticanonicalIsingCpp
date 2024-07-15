@@ -260,6 +260,10 @@ BaseWangLandauResults WangLandauSymmetric(const PBodyTwoDimIsing &model,
             }
             entropy_dict[std::abs(normalized_energy)] += diff;
             histogram_dict[std::abs(normalized_energy)] += 1;
+            if (normalized_energy == 0) {
+               entropy_dict[std::abs(normalized_energy)] += diff;
+               histogram_dict[std::abs(normalized_energy)] += 1;
+            }
          }
       }
 
