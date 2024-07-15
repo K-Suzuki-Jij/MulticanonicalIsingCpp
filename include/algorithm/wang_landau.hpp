@@ -201,6 +201,105 @@ WangLandau(const PBodyTwoDimIsing &model,
    return result_list;
 }
 
+BaseWangLandauResults WangLandauSymmetric(const PBodyTwoDimIsing &model, 
+                                          const WangLandauParameters parameters) {
+
+   // Check if the parameters are valid.
+   if (parameters.num_divided_energy_range != 1) {
+      throw std::invalid_argument("num_divided_energy_range must be 1.");
+   }
+
+   if (parameters.update_method != UpdateMethod::METROPOLIS) {
+      throw std::invalid_argument("update_method must be METROPOLIS.");
+   }
+
+   // Define variables
+   std::mt19937_64 engine(parameters.seed);
+   std::unordered_map<int, std::int64_t> histogram_dict;
+   std::unordered_map<int, double> entropy_dict;
+   double diff = 1.0;
+   bool loop_breaker = false;
+   const int twice_spin_magnitude = static_cast<int>(2*model.spin);
+   std::uniform_real_distribution<double> ud(0.0, 1.0);
+   std::uniform_int_distribution<int> dist_new_spins(0, twice_spin_magnitude - 1);
+   std::uniform_int_distribution<int> dist_all_spins(0, twice_spin_magnitude);
+   std::int64_t total_sweep = 0;
+
+   // Generate initial state
+   std::vector<std::vector<int>> twice_spins(model.Lx, std::vector<int>(model.Ly, 0));
+   for (int x = 0; x < model.Lx; ++x) {
+      for (int y = 0; y < model.Ly; ++y) {
+         twice_spins[x][y] = 2*dist_all_spins(engine) - twice_spin_magnitude;
+      }
+   }
+
+   // Calculate energy difference
+   std::vector<std::vector<int>> dE = model.MakeEnergyDifference(twice_spins);
+   int normalized_energy = model.CalculateNormalizedEnergy(twice_spins);
+
+   for (std::int64_t sweep = 0; sweep < parameters.max_sweeps; ++sweep) {
+      if (loop_breaker) {
+         total_sweep = sweep;
+         break;
+      }
+
+      for (int x = 0; x < model.Lx; ++x) {
+         for (int y = 0; y < model.Ly; ++y) {
+            int new_spin_value = 2*dist_new_spins(engine) - twice_spin_magnitude;
+            if (twice_spins[x][y] <= new_spin_value) {
+               new_spin_value += 2;
+            }
+
+            const int new_normalized_energy = normalized_energy + dE[x][y]*(new_spin_value - twice_spins[x][y]);
+            //const double dS = entropy_dict[new_normalized_energy] - entropy_dict[normalized_energy];
+            const double dS = entropy_dict[std::abs(new_normalized_energy)] - entropy_dict[std::abs(normalized_energy)];
+            if (dS <= 0.0 || ud(engine) < std::exp(-dS)) {
+               model.UpdateEnergyDifference(dE, new_spin_value, x, y, twice_spins);
+               twice_spins[x][y] = new_spin_value;
+               normalized_energy = new_normalized_energy;
+            }
+            entropy_dict[std::abs(normalized_energy)] += diff;
+            histogram_dict[std::abs(normalized_energy)] += 1;
+         }
+      }
+
+      // Check if the histogram is flat
+      if (sweep%parameters.convergence_check_interval == 0) {
+         const double hist_min = std::min_element(histogram_dict.begin(), histogram_dict.end(), [](const auto &a, const auto &b) {
+            return a.second < b.second;
+         })->second;
+         const double hist_mean = std::accumulate(histogram_dict.begin(), histogram_dict.end(), 0.0, [](const double &a, const auto &b) {
+            return a + b.second;
+         })/histogram_dict.size();
+         if (hist_min > parameters.flatness_criterion*hist_mean) {
+            if (diff < parameters.modification_criterion) {
+               loop_breaker = true;
+            }
+            diff *= parameters.reduce_rate;
+            histogram_dict.clear();
+         }
+      }
+   }
+
+   if (!loop_breaker) {
+      throw std::runtime_error("Dose not converge.");
+   }
+
+   // Extract keys of entropy_dict
+   std::vector<int> keys;
+   for (const auto &it: entropy_dict) {
+      keys.push_back(it.first);
+   }
+
+   // Fill minus keys
+   for (const int it: keys) { 
+      entropy_dict[-it] = entropy_dict.at(it);
+   }
+
+   return BaseWangLandauResults(entropy_dict, OrderParameters(), total_sweep + 1, diff/parameters.reduce_rate);
+};
+
+
 
 
 } // namespace cpp_muca

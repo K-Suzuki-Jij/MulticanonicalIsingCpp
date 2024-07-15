@@ -141,5 +141,37 @@ TEST(AlgorithmWangLandau, WangLandau) {
    EXPECT_EQ(hist_max, +2*4*4);
 }
 
+TEST(AlgorithmWangLandau, WangLandauSymmetric1) {
+   const PBodyTwoDimIsing model(-2, 2, 4, 4, 0.5, 2);
+   const WangLandauParameters wl_parameters(1e-08, 100, 1, 1, 100000, 0.8, 0.5, 0.2);
+   const auto result = WangLandauSymmetric(model, wl_parameters);
+      
+   const auto min_key = [](const auto &a, const auto &b) {return a.first < b.first;};
+   const int hist_min = std::min_element(result.entropy_dict.begin(),
+                                         result.entropy_dict.end(),
+                                         min_key)->first;
+   const int hist_max = std::max_element(result.entropy_dict.begin(),
+                                         result.entropy_dict.end(),
+                                         min_key)->first;
+   EXPECT_EQ(hist_min, -2*4*4);
+   EXPECT_EQ(hist_max, +2*4*4);
+}
+
+TEST(AlgorithmWangLandau, WangLandauSymmetric2) {
+   const PBodyTwoDimIsing model(-2, 3, 6, 6, 0.5, 2);
+   const WangLandauParameters wl_parameters(1e-08, 100, 1, 0, 100000, 0.8, 0.5, 0.2);
+   const auto result = WangLandauSymmetric(model, wl_parameters);
+      
+   const auto min_key = [](const auto &a, const auto &b) {return a.first < b.first;};
+   const int hist_min = std::min_element(result.entropy_dict.begin(),
+                                         result.entropy_dict.end(),
+                                         min_key)->first;
+   const int hist_max = std::max_element(result.entropy_dict.begin(),
+                                         result.entropy_dict.end(),
+                                         min_key)->first;
+   EXPECT_EQ(hist_min, -2*6*6);
+   EXPECT_EQ(hist_max, +2*6*6);
+}
+
 };
 };
