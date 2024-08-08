@@ -27,14 +27,17 @@ class Analyzer:
         """
         min_value = np.min(values) - 0.1
         scaled_values = values - min_value
-        result = np.zeros(len(temperature_list))
-        for i, temperature in enumerate(temperature_list):
-            exponents = -energies / temperature + entropies
-            exponents -= np.max(exponents)
-            a = reduce(np.logaddexp, exponents + np.log(scaled_values))
-            b = reduce(np.logaddexp, exponents)
-            result[i] = np.exp(a - b) + min_value
-        return result
+
+        # Prepare exponents
+        exponents = -energies[:, None] / temperature_list + entropies[:, None]
+        exponents -= np.max(exponents, axis=0)  # Normalize exponents
+
+        # Calculate log-sum-exp for both numerator and denominator
+        log_scaled_values = np.log(scaled_values[:, None])
+        a = np.logaddexp.reduce(exponents + log_scaled_values, axis=0)
+        b = np.logaddexp.reduce(exponents, axis=0)
+
+        return np.exp(a - b) + min_value
 
     @classmethod
     def calculate_expectation_mpmath(
